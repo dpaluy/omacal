@@ -67,23 +67,23 @@ FocusScope {
   // the chip under the pointer, or the chosen one.
   readonly property var barEventOptions: [
     { value: "soon", label: "Name + time",
-      help: "Shows the event's name and when it starts, like “Team standup · in 12m”, from its earliest alert until it ends." },
+      help: "Shows today's current or next event with its time. Future events stay out of the bar, even if their reminders are active." },
     { value: "name", label: "Name",
-      help: "Shows only the event's name, like “Team standup”, from its earliest alert until it ends." },
+      help: "Shows only the name of today's current or next event, like “Team standup”." },
     { value: "time", label: "Time",
-      help: "Shows only when the event starts, like “in 12m”, without its name, from its earliest alert until it ends." },
+      help: "Shows only the time of today's current or next event, like “in 12m”, without its name." },
     { value: "next", label: "Next",
-      help: "Always shows today's next event with its time, all day long, like “Dinner · at 18:30”. Events inside their alert come first." },
+      help: "Shows today's current or next event with its time. Today's imminent and ongoing events come first." },
     { value: "off", label: "Off",
       help: "Shows only the clock. A calendar icon appears in front of it while an event is coming up, and hovering the clock names it." }
   ]
 
   readonly property var leadOptions: [
-    { value: "0", label: "Never", help: "Events with no alert never appear in the bar. Only events with an alert do, from that alert." },
-    { value: "5", label: "5 min", help: "Events with no alert appear in the bar 5 minutes before they start." },
-    { value: "15", label: "15 min", help: "Events with no alert appear in the bar 15 minutes before they start." },
-    { value: "30", label: "30 min", help: "Events with no alert appear in the bar 30 minutes before they start." },
-    { value: "60", label: "1 h", help: "Events with no alert appear in the bar an hour before they start." }
+    { value: "0", label: "Never", help: "Do not prioritize events before they start unless a reminder is active. Today's next event still appears." },
+    { value: "5", label: "5 min", help: "Prioritize today's imminent events 5 minutes before they start." },
+    { value: "15", label: "15 min", help: "Prioritize today's imminent events 15 minutes before they start." },
+    { value: "30", label: "30 min", help: "Prioritize today's imminent events 30 minutes before they start." },
+    { value: "60", label: "1 h", help: "Prioritize today's imminent events an hour before they start." }
   ]
 
   property int barEventHover: -1
@@ -173,7 +173,7 @@ FocusScope {
       text: root.helpFor(root.barEventOptions, root.barEventHover, String(root.value("barEvent", "soon")))
     }
 
-    Label { text: "EVENTS WITH NO ALERT APPEAR BEFORE THEY START" }
+    Label { text: "UPCOMING EVENT PRIORITY WINDOW" }
 
     ButtonGroup {
       // Transparent at rest, not the theme background: the hover fill is a
