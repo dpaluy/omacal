@@ -830,19 +830,18 @@ function barEvents(events, nowMs, leadMinutes) {
   return open.map(function(o) { return o.event })
 }
 
-// Which events the bar names, by the `barEvent` setting: "soon" (the
-// default) those inside their alert windows, "name" and "time" the same
-// with only their titles or only when, "next" the next one left today all
-// day, "off" none.
+// The bar is today's agenda, not a list of future reminder windows.
+// Keep imminent/current events first, then show today's next timed event
+// even before its reminder. An all-day event must not hide that meeting.
+// `events` remains in the signature for existing callers; notifications
+// still use the full event cache independently.
 function barSelection(mode, events, todayEvents, nowMs, leadMinutes) {
   if (mode === "off") return []
-  if (mode === "next") {
-    var open = barEvents(events, nowMs, leadMinutes)
-    if (open.length > 0) return open
-    var next = currentOrNextEvent(todayEvents, nowMs)
-    return next ? [next] : []
-  }
-  return barEvents(events, nowMs, leadMinutes)
+  var open = barEvents(todayEvents, nowMs, leadMinutes)
+  var next = currentOrNextEvent(todayEvents, nowMs)
+  if (next && !next.allDay && (open.length === 0 || open[0].allDay)) return [next]
+  if (open.length > 0) return open
+  return next ? [next] : []
 }
 
 // The first event and how many more: "Podcast · in 12m  +1". The `style`

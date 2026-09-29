@@ -184,25 +184,25 @@ test("the bar names an event and says when", function() {
   assert.strictEqual(Hey.barEventLabel(e, e.startMs - 24 * 3600000, true), "Team sync · tomorrow 13:00")
 })
 
-test("the bar opens at the earliest reminder, or the lead time without one", function() {
+test("alert windows open at the earliest reminder, or the lead time without one", function() {
   var e = timed(1, "Flight", 2026, 9, 28, 13, 0, 90)
   e.reminders = [e.startMs - 30 * 60000, e.startMs - 24 * 3600000]
-  assert.deepStrictEqual(Hey.barSelection("soon", [e], [], e.startMs - 20 * 3600000, 15), [e])
-  assert.deepStrictEqual(Hey.barSelection("soon", [e], [], e.startMs - 25 * 3600000, 15), [])
+  assert.deepStrictEqual(Hey.barEvents([e], e.startMs - 20 * 3600000, 15), [e])
+  assert.deepStrictEqual(Hey.barEvents([e], e.startMs - 25 * 3600000, 15), [])
   var plain = timed(2, "Call", 2026, 9, 28, 13, 0, 30)
-  assert.deepStrictEqual(Hey.barSelection("soon", [plain], [], plain.startMs - 20 * 60000, 15), [])
-  assert.deepStrictEqual(Hey.barSelection("soon", [plain], [], plain.startMs - 10 * 60000, 15), [plain])
-  assert.deepStrictEqual(Hey.barSelection("soon", [plain], [], plain.endMs, 15), [])
+  assert.deepStrictEqual(Hey.barEvents([plain], plain.startMs - 20 * 60000, 15), [])
+  assert.deepStrictEqual(Hey.barEvents([plain], plain.startMs - 10 * 60000, 15), [plain])
+  assert.deepStrictEqual(Hey.barEvents([plain], plain.endMs, 15), [])
 })
 
-test("all-day events show from their reminder, never without one", function() {
+test("all-day alert windows require a reminder", function() {
   var bday = allDay(3, "Lena's bday", "2026-09-29")
   var eve = new Date(2026, 8, 28, 20, 0).getTime()
-  assert.deepStrictEqual(Hey.barSelection("soon", [bday], [], eve, 15), [])
+  assert.deepStrictEqual(Hey.barEvents([bday], eve, 15), [])
   bday.reminders = [new Date(2026, 8, 28, 8, 0).getTime()]
-  assert.deepStrictEqual(Hey.barSelection("soon", [bday], [], eve, 15), [bday])
+  assert.deepStrictEqual(Hey.barEvents([bday], eve, 15), [bday])
   assert.strictEqual(Hey.barEventLabel(bday, eve, true), "Lena's bday · tomorrow")
-  assert.deepStrictEqual(Hey.barSelection("soon", [bday], [], new Date(2026, 8, 30, 0, 1).getTime(), 15), [])
+  assert.deepStrictEqual(Hey.barEvents([bday], new Date(2026, 8, 30, 0, 1).getTime(), 15), [])
 })
 
 test("overlaps: about to start beats under way beats coming beats all day", function() {
@@ -212,10 +212,10 @@ test("overlaps: about to start beats under way beats coming beats all day", func
   var later = timed(3, "Lunch", 2026, 10, 1, 12, 0, 60)
   later.reminders = [later.startMs - 3 * 3600000]
   var holiday = allDay(4, "Holiday", "2026-10-01", "2026-10-01", { reminders: ["2026-09-30T08:00:00Z"] })
-  var pick = Hey.barSelection("soon", [holiday, later, meeting, soon], [], now, 15)
+  var pick = Hey.barSelection("soon", [holiday, later, meeting, soon], [holiday, later, meeting, soon], now, 15)
   assert.deepStrictEqual(pick.map(function(e) { return e.title }), ["Standup", "Meeting", "Lunch", "Holiday"])
   assert.strictEqual(Hey.barLabel(pick, now, true), "Standup · in 10m  +3")
-  var afterStandup = Hey.barSelection("soon", [meeting, later], [], now + 5 * 60000, 15)
+  var afterStandup = Hey.barSelection("soon", [meeting, later], [meeting, later], now + 5 * 60000, 15)
   assert.strictEqual(afterStandup[0].title, "Meeting")
 })
 
@@ -239,6 +239,48 @@ test("next mode falls back to today's next event", function() {
   var now = e.startMs - 3 * 3600000
   assert.deepStrictEqual(Hey.barSelection("next", [e], [e], now, 15), [e])
   assert.deepStrictEqual(Hey.barSelection("off", [e], [e], e.startMs - 60000, 15), [])
+})
+
+test("all enabled modes show today's next meeting, not future reminder windows", function() {
+  var now = new Date(2026, 8, 29, 11, 42).getTime()
+  var meeting = timed(1, "Today's meeting", 2026, 9, 29, 13, 0, 30)
+  var birthday = allDay(2, "Future birthday", "2026-10-02")
+  birthday.reminders = [new Date(2026, 8, 25, 9, 0).getTime()]
+  var tomorrow = timed(3, "Tomorrow's meeting", 2026, 9, 30, 10, 0, 30)
+  tomorrow.reminders = [now - 60000]
+  var events = [birthday, tomorrow, meeting]
+  var today = Hey.indexByDay(events)["2026-09-29"] || []
+  ;["soon", "name", "time", "next"].forEach(function(mode) {
+    assert.deepStrictEqual(Hey.barSelection(mode, events, today, now, 15), [meeting])
+    assert.deepStrictEqual(Hey.barSelection(mode, [birthday, tomorrow], [], now, 15), [])
+    assert.deepStrictEqual(Hey.barSelection(mode, events, today, meeting.endMs, 15), [])
+  })
+  assert.strictEqual(Hey.barLabel([meeting], now, true, "name"), "Today's meeting")
+  assert.strictEqual(Hey.dueReminders(events, now, now - 120000, {}).length, 1)
+})
+
+test("today's all-day alert does not hide an upcoming timed meeting", function() {
+  var now = new Date(2026, 8, 29, 9, 0).getTime()
+  var holiday = allDay(1, "Holiday", "2026-09-29")
+  holiday.reminders = [now - 3600000]
+  var meeting = timed(2, "Afternoon meeting", 2026, 9, 29, 13, 0, 30)
+  assert.deepStrictEqual(Hey.barSelection("name", [holiday, meeting], [holiday, meeting], now, 15), [meeting])
+  assert.deepStrictEqual(Hey.barSelection("name", [holiday], [holiday], now, 15), [holiday])
+  holiday.reminders = []
+  assert.deepStrictEqual(Hey.barSelection("name", [holiday], [holiday], now, 15), [holiday])
+})
+
+test("today-only includes overnight events and skips declined or ended meetings", function() {
+  var now = new Date(2026, 8, 29, 0, 30).getTime()
+  var overnight = timed(1, "Overnight", 2026, 9, 28, 23, 30, 120)
+  var ended = timed(2, "Ended", 2026, 9, 28, 23, 0, 60)
+  var declined = timed(3, "Declined", 2026, 9, 29, 1, 0, 30)
+  declined.status = "declined"
+  var events = [ended, declined, overnight]
+  var today = Hey.indexByDay(events)["2026-09-29"] || []
+  assert.deepStrictEqual(Hey.barSelection("name", events, today, now, 15), [overnight])
+  assert.deepStrictEqual(Hey.barSelection("name", events, today, overnight.endMs, 15), [])
+  assert.deepStrictEqual(Hey.barSelection("off", events, today, now, 15), [])
 })
 
 test("long titles are cut to fit the bar", function() {
