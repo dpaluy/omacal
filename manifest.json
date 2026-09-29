@@ -66,7 +66,7 @@
           "off"
         ],
         "defaultValue": "soon",
-        "description": "Only today's events appear. Imminent and ongoing events come first, otherwise today's next timed event appears. All-day events are the fallback. \"soon\" and \"next\" show name and time; \"name\" and \"time\" show only one. \"off\" hides the event label. Reminder notifications are unchanged."
+        "description": "\"soon\" shows an event's name and when, from its earliest reminder until it ends. \"name\" and \"time\" show only one of the two. \"next\" always shows today's next event. \"off\" shows only the calendar glyph."
       },
       {
         "key": "notifications",
@@ -85,12 +85,12 @@
       {
         "key": "alertLeadMinutes",
         "type": "integer",
-        "label": "Upcoming event priority window (minutes)",
+        "label": "Show the calendar icon this many minutes ahead",
         "min": 0,
         "max": 240,
         "step": 5,
         "defaultValue": 15,
-        "description": "Prioritize today's events this many minutes before they start. Today's next event can appear earlier. 0 disables advance priority for events without reminders."
+        "description": "The icon appears this long before an event starts and stays until it ends. 0 turns it off."
       },
       {
         "key": "timeFormat",

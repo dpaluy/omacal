@@ -84,14 +84,15 @@ copied as a dependency.
   new) or deleted from its hover button.
 - **Live sync.** HEY's `hey watch` stream refreshes the panel within seconds of
   a change made anywhere else, with polling as the fallback.
-- **In the bar**, only events happening today appear, including overnight
-  events that continue into today. Future events stay out even if an early
-  reminder is active. Today's imminent and ongoing events come first;
-  otherwise the bar shows today's next timed event without waiting for its
-  reminder. All-day events cannot hide that next meeting. If no timed event
-  remains, today's all-day events can appear. Overlapping active alerts
-  show a count (`+2`). Reminder notifications still follow the original
-  event reminders, including reminders for future dates.
+- **In the bar**, like a macOS menu-bar calendar: an event's name and when
+  sit in front of the stock clock (`󰃭 Team standup · in 12m`, then
+  `· until 14:30`) from its **earliest reminder** until it ends. A day
+  ahead if you asked for a day's notice, 30 minutes if 30. Without
+  reminders it uses `alertLeadMinutes`; all-day events only show when they
+  have a reminder. When several overlap, the bar names one and counts the
+  rest (`+2`), and hovering lists them all. What it names first: something
+  starting within `alertLeadMinutes`, then what is under way (ending
+  soonest first), then what is coming, then all-day events.
 - **Today in HEY's orange**, in the grid as well as the day view, and a
   **Today** button (or `T`) back to it whenever you have moved away.
 
@@ -200,10 +201,10 @@ at once, so it can be edited there too.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `barEvent` | `soon` | All enabled modes show only today's events. `soon` and `next`: current or next event with its time. `name`: title only. `time`: time only. `off`: no event label. |
+| `barEvent` | `soon` | `soon`: name an event in the bar from its earliest reminder until it ends. `name`: the same, but only the title. `time`: the same, but only when (`in 12m`). `next`: always name today's next event. `off`: the glyph only. |
 | `notifications` | `true` | Show HEY reminders as notifications. |
 | `quickAddShortcut` | `ALT + SHIFT + SPACE` | Opens the quick-add card. Empty turns it off. |
-| `alertLeadMinutes` | `15` | The priority window for imminent events. Today's next event can appear before this window. |
+| `alertLeadMinutes` | `15` | How early the bar names an event that has no reminders, and what counts as "about to start". |
 | `timeFormat` | `auto` | `auto`, `12` or `24`. |
 | `liveSync` | `true` | Keep a `hey watch` running for instant updates. |
 | `refreshIntervalSec` | `300` | Polling fallback, 30 to 3600. |

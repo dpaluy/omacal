@@ -42,8 +42,9 @@ BarWidget {
   // The event the bar names in front of the clock, as the macOS menu-bar
   // calendars do. Horizontal bars only: a vertical one has no room.
   readonly property string barEventMode: String(setting("barEvent", "soon"))
-  // Today's imminent/current events, or today's next event before its
-  // reminder. Future reminder windows do not enter the bar selection.
+  // Every event inside its alert window (from its earliest HEY reminder
+  // until it ends), most pressing first; the bar names the first and counts
+  // the rest.
   readonly property var shownEvents: Cal.barSelection(barEventMode, events, todayEvents, displayDate.getTime(), alertLeadMinutes)
   readonly property string eventText: Cal.barLabel(shownEvents, displayDate.getTime(), hour24, barEventMode)
   readonly property string displayText: eventText !== ""
