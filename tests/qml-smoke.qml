@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "plugin" as Plugin
+import "plugin/Calendar.js" as Cal
 
 ShellRoot {
   id: root
@@ -26,6 +27,44 @@ ShellRoot {
     }
   }
   Plugin.QuickAdd { id: heyQuickAdd }
+  Plugin.SettingsView {
+    id: settingsPanel
+    host: widget
+    panel: QtObject {
+      function setting(key, fallback) { return widget.setting(key, fallback) }
+      function persistSettings(values) {
+        var next = Object.assign({}, widget.settings, values)
+        widget.settings = next
+      }
+    }
+  }
+  function findToggle(item) {
+    if (item.label === "Today only") return item
+    var children = item.children || []
+    for (var i = 0; i < children.length; i++) {
+      var found = findToggle(children[i])
+      if (found) return found
+    }
+    return null
+  }
+  function testTodayToggle() {
+    widget.displayDate = new Date(2026, 8, 29, 11, 42)
+    var meeting = Cal.normalizeEvent({id: 101, title: "Today meeting",
+      starts_at: new Date(2026, 8, 29, 13).toISOString(), ends_at: new Date(2026, 8, 29, 14).toISOString()})
+    var birthday = Cal.normalizeEvent({id: 102, title: "Future birthday", all_day: true,
+      starts_at: "2026-10-02", ends_at: "2026-10-03", reminders: [new Date(2026, 8, 25, 9).toISOString()]})
+    widget.weekCache = ({ "2026-09-28": { events: [birthday, meeting], at: Date.now() } })
+    widget.rebuildIndex()
+    var toggle = findToggle(settingsPanel)
+    if (!toggle || toggle.checked) throw new Error("Today-only must default off")
+    if (widget.shownEvents[0].title !== "Future birthday") throw new Error("Original mode failed")
+    toggle.clicked()
+    if (!toggle.checked || widget.settings.todayOnly !== true) throw new Error("Toggle was not saved")
+    if (widget.shownEvents[0].title !== "Today meeting") throw new Error("Today-only binding failed")
+    toggle.clicked()
+    if (toggle.checked || widget.settings.todayOnly !== false) throw new Error("Toggle off was not saved")
+    if (widget.shownEvents[0].title !== "Future birthday") throw new Error("Original behavior was not restored")
+  }
   Plugin.EventForm {
     id: form
     calendars: widget.writableCalendars
@@ -45,6 +84,7 @@ ShellRoot {
       if (heyQuickAdd.backend.info.id !== "hey") throw new Error("Default HEY backend changed")
       if (widget.capabilities.watch || widget.capabilities.timeTracking) throw new Error("Wrong capabilities")
       root.submitted = true
+      root.testTodayToggle()
       if (!widget.addEvent({title: "Fixture write", date: "2026-09-28", allDay: true,
                            calendarId: form.calendarId})) throw new Error("Write did not start")
     }
