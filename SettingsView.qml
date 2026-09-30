@@ -152,16 +152,6 @@ FocusScope {
     }
 
     // ---- Bar
-    Toggle {
-      width: parent.width
-      label: "Today only"
-      description: "On: today's current or next event. Off: original reminder windows, including future events. Notifications are unchanged."
-      checked: root.value("todayOnly", false) === true
-      foreground: root.foreground
-      fontFamily: root.fontFamily
-      onClicked: root.save("todayOnly", !checked)
-    }
-
     Label { text: "EVENT IN THE BAR" }
 
     ButtonGroup {
@@ -180,12 +170,10 @@ FocusScope {
     }
 
     Note {
-      text: root.value("todayOnly", false) === true
-        ? "Only today's events appear. Today's next timed event can appear before its reminder; all-day events cannot hide it. The buttons control the label format; Off hides it."
-        : root.helpFor(root.barEventOptions, root.barEventHover, String(root.value("barEvent", "soon")))
+      text: root.helpFor(root.barEventOptions, root.barEventHover, String(root.value("barEvent", "soon")))
     }
 
-    Label { text: root.value("todayOnly", false) === true ? "UPCOMING EVENT PRIORITY WINDOW" : "EVENTS WITH NO ALERT APPEAR BEFORE THEY START" }
+    Label { text: "EVENTS WITH NO ALERT APPEAR BEFORE THEY START" }
 
     ButtonGroup {
       // Transparent at rest, not the theme background: the hover fill is a
@@ -202,9 +190,7 @@ FocusScope {
     }
 
     Note {
-      text: root.value("todayOnly", false) === true
-        ? "This window prioritizes today's imminent events. Today's next event can appear before the window opens."
-        : root.helpFor(root.leadOptions, root.leadHover, String(Cal.normalizedAlertLead(root.value("alertLeadMinutes", 15))))
+      text: root.helpFor(root.leadOptions, root.leadHover, String(Cal.normalizedAlertLead(root.value("alertLeadMinutes", 15))))
     }
 
     Label { text: "TIMES" }
